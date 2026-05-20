@@ -37,6 +37,7 @@ log = Log(name=__name__, path=os.environ.get("JUB_LOG_PATH", "/log"))
 async def create_product(
     payload: DTO.ProductCreateDTO,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     product_id = payload.product_id or nanoid(size=12)
@@ -65,6 +66,7 @@ async def create_product(
 async def list_products(
     limit: int = Query(100, ge=1, le=500),
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     result = await svc.list_products(limit=limit)
@@ -90,6 +92,7 @@ async def filter_products(
     request: Request,
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results to return."),
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     """
     Filter products by arbitrary metadata key-value pairs.
@@ -117,6 +120,7 @@ async def filter_products(
 async def get_product(
     product_id: str,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     result = await svc.get_product_by_id(product_id)
@@ -132,6 +136,7 @@ async def update_product(
     product_id: str,
     payload: DTO.ProductUpdateDTO,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
@@ -153,6 +158,7 @@ async def update_product(
 async def delete_product(
     product_id: str,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     result = await svc.delete_product(product_id)
@@ -171,6 +177,7 @@ async def delete_product(
 async def get_tags(
     product_id: str,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     # Ensure product exists
     check = await svc.get_product_by_id(product_id)
@@ -188,6 +195,7 @@ async def get_tag_details(
     product_id: str,
     prod_svc: S.ProductService = Depends(MX.get_product_service),
     cat_svc:  S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await prod_svc.get_product_by_id(product_id)
     if check.is_err:
@@ -210,6 +218,7 @@ async def add_tags(
     product_id: str,
     payload: DTO.TagProductDTO,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     result = await svc.tag_product(product_id, payload.catalog_item_ids)
     if result.is_err:
@@ -229,6 +238,7 @@ async def bulk_tag_from_catalog(
     catalog_id: str,
     prod_svc: S.ProductService = Depends(MX.get_product_service),
     cat_svc:  S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     catalog_check = await cat_svc.get_catalog_details(catalog_id)
     if catalog_check.is_err:
@@ -248,6 +258,7 @@ async def remove_tag(
     product_id: str,
     catalog_item_id: str,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_product_by_id(product_id)
     if check.is_err:
@@ -271,6 +282,7 @@ async def remove_tag(
 async def get_related_products(
     product_id: str,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     """
     Returns all products related to the given product.
@@ -298,6 +310,7 @@ async def add_related_product(
     product_id: str,
     payload: DTO.RelateProductDTO,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     """
     Relates two products to each other.
@@ -322,6 +335,7 @@ async def remove_related_product(
     product_id: str,
     related_product_id: str,
     svc: S.ProductService = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     """Removes the symmetric relationship between two products."""
     result = await svc.unrelate_products(product_id, related_product_id)
@@ -414,6 +428,7 @@ async def download_product_file(
     job_id:     Optional[str]      = Query(None, description="Specific upload job to download. Defaults to the latest."),
     prod_svc:   S.ProductService   = Depends(MX.get_product_service),
     storage:    StorageBackend     = Depends(MX.get_storage_backend),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     """
     Downloads a previously uploaded file for a product.

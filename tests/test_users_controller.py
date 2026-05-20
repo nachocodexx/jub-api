@@ -61,26 +61,26 @@ async def signup_and_login(client: AsyncClient) -> tuple[dict, dict]:
 # ==========================================
 
 @pytest.mark.asyncio
-async def test_signup_success(async_client: AsyncClient):
-    resp = await async_client.post("/api/v2/users/signup", json=unique_user())
+async def test_signup_success(unauth_client: AsyncClient):
+    resp = await unauth_client.post("/api/v2/users/signup", json=unique_user())
     assert resp.status_code == 200
     body = resp.json()
     assert "username" in body
 
 
 @pytest.mark.asyncio
-async def test_signup_missing_required_field_returns_422(async_client: AsyncClient):
+async def test_signup_missing_required_field_returns_422(unauth_client: AsyncClient):
     incomplete = {"username": "nopassword", "scope": "jub"}
-    resp = await async_client.post("/api/v2/users/signup", json=incomplete)
+    resp = await unauth_client.post("/api/v2/users/signup", json=incomplete)
     assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_signup_duplicate_username_returns_error(async_client: AsyncClient):
+async def test_signup_duplicate_username_returns_error(unauth_client: AsyncClient):
     data = unique_user()
-    first = await async_client.post("/api/v2/users/signup", json=data)
+    first = await unauth_client.post("/api/v2/users/signup", json=data)
     assert first.status_code == 200
-    second = await async_client.post("/api/v2/users/signup", json=data)
+    second = await unauth_client.post("/api/v2/users/signup", json=data)
     assert second.status_code != 200
 
 
@@ -89,10 +89,10 @@ async def test_signup_duplicate_username_returns_error(async_client: AsyncClient
 # ==========================================
 
 @pytest.mark.asyncio
-async def test_login_success(async_client: AsyncClient):
+async def test_login_success(unauth_client: AsyncClient):
     data = unique_user()
-    await async_client.post("/api/v2/users/signup", json=data)
-    resp = await async_client.post("/api/v2/users/auth", json={
+    await unauth_client.post("/api/v2/users/signup", json=data)
+    resp = await unauth_client.post("/api/v2/users/auth", json={
         "username": data["username"], "password": data["password"],
         "scope": data["scope"], "expiration": "1h",
     })
@@ -104,10 +104,10 @@ async def test_login_success(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_login_wrong_password_returns_error(async_client: AsyncClient):
+async def test_login_wrong_password_returns_error(unauth_client: AsyncClient):
     data = unique_user()
-    await async_client.post("/api/v2/users/signup", json=data)
-    resp = await async_client.post("/api/v2/users/auth", json={
+    await unauth_client.post("/api/v2/users/signup", json=data)
+    resp = await unauth_client.post("/api/v2/users/auth", json={
         "username": data["username"], "password": "WRONG_PASSWORD",
         "scope": data["scope"], "expiration": "1h",
     })
@@ -115,8 +115,8 @@ async def test_login_wrong_password_returns_error(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_login_nonexistent_user_returns_error(async_client: AsyncClient):
-    resp = await async_client.post("/api/v2/users/auth", json={
+async def test_login_nonexistent_user_returns_error(unauth_client: AsyncClient):
+    resp = await unauth_client.post("/api/v2/users/auth", json={
         "username": "ghost_user_xyz", "password": "whatever",
         "scope": "jub", "expiration": "1h",
     })
@@ -128,9 +128,9 @@ async def test_login_nonexistent_user_returns_error(async_client: AsyncClient):
 # ==========================================
 
 @pytest.mark.asyncio
-async def test_get_me_success(async_client: AsyncClient):
-    user_profile, headers = await signup_and_login(async_client)
-    resp = await async_client.get("/api/v2/users/me", headers=headers)
+async def test_get_me_success(unauth_client: AsyncClient):
+    user_profile, headers = await signup_and_login(unauth_client)
+    resp = await unauth_client.get("/api/v2/users/me", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["username"] == user_profile["username"]
@@ -138,14 +138,14 @@ async def test_get_me_success(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_me_without_token_returns_401(async_client: AsyncClient):
-    resp = await async_client.get("/api/v2/users/me")
+async def test_get_me_without_token_returns_401(unauth_client: AsyncClient):
+    resp = await unauth_client.get("/api/v2/users/me")
     assert resp.status_code == 401
 
 
 @pytest.mark.asyncio
-async def test_get_me_invalid_token_returns_401(async_client: AsyncClient):
-    resp = await async_client.get(
+async def test_get_me_invalid_token_returns_401(unauth_client: AsyncClient):
+    resp = await unauth_client.get(
         "/api/v2/users/me",
         headers={"Authorization": "Bearer invalid.token.here"},
     )
@@ -157,9 +157,9 @@ async def test_get_me_invalid_token_returns_401(async_client: AsyncClient):
 # ==========================================
 
 @pytest.mark.asyncio
-async def test_get_settings_own_user(async_client: AsyncClient):
-    user_profile, headers = await signup_and_login(async_client)
-    resp = await async_client.get(
+async def test_get_settings_own_user(unauth_client: AsyncClient):
+    user_profile, headers = await signup_and_login(unauth_client)
+    resp = await unauth_client.get(
         f"/api/v2/users/{user_profile['user_id']}/settings",
         headers=headers,
     )
@@ -171,11 +171,11 @@ async def test_get_settings_own_user(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_settings_other_user_returns_403(async_client: AsyncClient):
-    user_a, headers_a = await signup_and_login(async_client)
-    user_b, _         = await signup_and_login(async_client)
+async def test_get_settings_other_user_returns_403(unauth_client: AsyncClient):
+    user_a, headers_a = await signup_and_login(unauth_client)
+    user_b, _         = await signup_and_login(unauth_client)
 
-    resp = await async_client.get(
+    resp = await unauth_client.get(
         f"/api/v2/users/{user_b['user_id']}/settings",
         headers=headers_a,
     )
@@ -183,9 +183,9 @@ async def test_get_settings_other_user_returns_403(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_settings_unauthenticated_returns_401(async_client: AsyncClient):
-    user_profile, _ = await signup_and_login(async_client)
-    resp = await async_client.get(f"/api/v2/users/{user_profile['user_id']}/settings")
+async def test_get_settings_unauthenticated_returns_401(unauth_client: AsyncClient):
+    user_profile, _ = await signup_and_login(unauth_client)
+    resp = await unauth_client.get(f"/api/v2/users/{user_profile['user_id']}/settings")
     assert resp.status_code == 401
 
 
@@ -201,9 +201,9 @@ NEW_SETTINGS = {
 
 
 @pytest.mark.asyncio
-async def test_update_settings_own_user(async_client: AsyncClient):
-    user_profile, headers = await signup_and_login(async_client)
-    resp = await async_client.put(
+async def test_update_settings_own_user(unauth_client: AsyncClient):
+    user_profile, headers = await signup_and_login(unauth_client)
+    resp = await unauth_client.put(
         f"/api/v2/users/{user_profile['user_id']}/settings",
         headers=headers,
         json=NEW_SETTINGS,
@@ -212,15 +212,15 @@ async def test_update_settings_own_user(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_settings_persisted(async_client: AsyncClient):
-    user_profile, headers = await signup_and_login(async_client)
-    await async_client.put(
+async def test_update_settings_persisted(unauth_client: AsyncClient):
+    user_profile, headers = await signup_and_login(unauth_client)
+    await unauth_client.put(
         f"/api/v2/users/{user_profile['user_id']}/settings",
         headers=headers,
         json=NEW_SETTINGS,
     )
     # Verify the change was persisted
-    get_resp = await async_client.get(
+    get_resp = await unauth_client.get(
         f"/api/v2/users/{user_profile['user_id']}/settings",
         headers=headers,
     )
@@ -233,11 +233,11 @@ async def test_update_settings_persisted(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_settings_other_user_returns_403(async_client: AsyncClient):
-    user_a, headers_a = await signup_and_login(async_client)
-    user_b, _         = await signup_and_login(async_client)
+async def test_update_settings_other_user_returns_403(unauth_client: AsyncClient):
+    user_a, headers_a = await signup_and_login(unauth_client)
+    user_b, _         = await signup_and_login(unauth_client)
 
-    resp = await async_client.put(
+    resp = await unauth_client.put(
         f"/api/v2/users/{user_b['user_id']}/settings",
         headers=headers_a,
         json=NEW_SETTINGS,
@@ -246,9 +246,9 @@ async def test_update_settings_other_user_returns_403(async_client: AsyncClient)
 
 
 @pytest.mark.asyncio
-async def test_update_settings_unauthenticated_returns_401(async_client: AsyncClient):
-    user_profile, _ = await signup_and_login(async_client)
-    resp = await async_client.put(
+async def test_update_settings_unauthenticated_returns_401(unauth_client: AsyncClient):
+    user_profile, _ = await signup_and_login(unauth_client)
+    resp = await unauth_client.put(
         f"/api/v2/users/{user_profile['user_id']}/settings",
         json=NEW_SETTINGS,
     )
@@ -256,9 +256,9 @@ async def test_update_settings_unauthenticated_returns_401(async_client: AsyncCl
 
 
 @pytest.mark.asyncio
-async def test_update_settings_invalid_body_returns_422(async_client: AsyncClient):
-    user_profile, headers = await signup_and_login(async_client)
-    resp = await async_client.put(
+async def test_update_settings_invalid_body_returns_422(unauth_client: AsyncClient):
+    user_profile, headers = await signup_and_login(unauth_client)
+    resp = await unauth_client.put(
         f"/api/v2/users/{user_profile['user_id']}/settings",
         headers=headers,
         json={"appearance": {"font_size": "not_a_number"}},

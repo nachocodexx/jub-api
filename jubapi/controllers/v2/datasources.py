@@ -19,6 +19,7 @@ router = APIRouter(prefix="/datasources", tags=["datasources_v2"])
 async def register_data_source(
     payload: DTO.DataSourceCreateDTO,
     svc: S.DataIngestionService = Depends(MX.get_data_ingestion_service),
+    _:DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     result = await svc.register_data_source(
@@ -38,6 +39,8 @@ async def register_data_source(
 @router.get("", response_model=List[DTO.DataSourceDTO])
 async def list_data_sources(
     svc: S.DataIngestionService = Depends(MX.get_data_ingestion_service),
+    _:DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
+
 ):
     t0 = time.monotonic()
     result = await svc.source_repo.find({}, limit=200)
@@ -53,6 +56,7 @@ async def list_data_sources(
 async def get_data_source(
     source_id: str,
     svc: S.DataIngestionService = Depends(MX.get_data_ingestion_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     result = await svc.source_repo.get_by_id(source_id)
@@ -68,6 +72,7 @@ async def update_data_source(
     source_id: str,
     payload: DTO.DataSourceUpdateDTO,
     svc: S.DataIngestionService = Depends(MX.get_data_ingestion_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     data = {k: v for k, v in payload.model_dump().items() if v is not None}
@@ -83,6 +88,7 @@ async def update_data_source(
 async def delete_data_source(
     source_id: str,
     svc: S.DataIngestionService = Depends(MX.get_data_ingestion_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     count_result = await svc.record_repo.count({"source_id": source_id})
@@ -101,6 +107,7 @@ async def ingest_records(
     source_id: str,
     records: List[DTO.DataRecordCreateDTO],
     svc: S.DataIngestionService = Depends(MX.get_data_ingestion_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     models = [
@@ -128,6 +135,7 @@ async def query_records(
     source_id: str,
     payload: DTO.DataSourceQueryDTO,
     svc: S.DataQueryService = Depends(MX.get_data_query_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     result = await svc.query(source_id, payload.query)

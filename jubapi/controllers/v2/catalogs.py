@@ -17,7 +17,11 @@ log = Log(
 
 
 @router.post("")
-async def create_catalog(payload: DTO.CatalogCreateDTO, srv: S.CatalogService = Depends(MX.get_catalog_service)):
+async def create_catalog(
+    payload: DTO.CatalogCreateDTO, 
+    srv: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
+):
     t0 = time.monotonic()
     result = await srv.create_catalog_bulk(payload)
     if result.is_err:
@@ -29,7 +33,11 @@ async def create_catalog(payload: DTO.CatalogCreateDTO, srv: S.CatalogService = 
 
 
 @router.post("/bulk")
-async def create_catalog_bulk(payload: List[DTO.CatalogCreateDTO], srv: S.CatalogService = Depends(MX.get_catalog_service)):
+async def create_catalog_bulk(
+    payload: List[DTO.CatalogCreateDTO], 
+    srv: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
+):
     t0 = time.monotonic()
     results = [await srv.create_catalog_bulk(p) for p in payload]
     if any(r.is_err for r in results):
@@ -46,7 +54,8 @@ async def create_catalog_bulk_and_link(
     observatory_id: str,
     payload: List[DTO.CatalogCreateDTO],
     srv: S.CatalogService = Depends(MX.get_catalog_service),
-    observatory_srv: S.ObservatoriesService = Depends(MX.get_observatories_service)
+    observatory_srv: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     results = [await srv.create_catalog_bulk(p) for p in payload]
@@ -67,7 +76,10 @@ async def create_catalog_bulk_and_link(
 
 
 @router.get("", response_model=List[DTO.CatalogSummaryDTO])
-async def list_catalogs(srv: S.CatalogService = Depends(MX.get_catalog_service)):
+async def list_catalogs(
+    srv: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
+):
     """Returns a lightweight list of all available catalogs."""
     t0 = time.monotonic()
     result = await srv.list_catalogs()
@@ -80,7 +92,7 @@ async def list_catalogs(srv: S.CatalogService = Depends(MX.get_catalog_service))
 
 
 @router.get("/{catalog_id}", response_model=DTO.CatalogResponseDTO)
-async def get_catalog(catalog_id: str, srv: S.CatalogService = Depends(MX.get_catalog_service)):
+async def get_catalog(catalog_id: str, srv: S.CatalogService = Depends(MX.get_catalog_service), _: DTO.UserProfileDTO = Depends(MX.get_current_user)):
     """Fetches a specific catalog with all its items, aliases, and hierarchy populated."""
     t0 = time.monotonic()
     result = await srv.get_catalog_details(catalog_id)
@@ -92,7 +104,7 @@ async def get_catalog(catalog_id: str, srv: S.CatalogService = Depends(MX.get_ca
 
 
 @router.put("/{catalog_id}", response_model=DTO.CatalogSummaryDTO)
-async def update_catalog(catalog_id: str, payload: DTO.CatalogUpdateDTO, srv: S.CatalogService = Depends(MX.get_catalog_service)):
+async def update_catalog(catalog_id: str, payload: DTO.CatalogUpdateDTO, srv: S.CatalogService = Depends(MX.get_catalog_service), _: DTO.UserProfileDTO = Depends(MX.get_current_user)):
     t0 = time.monotonic()
     data = {k: v for k, v in payload.model_dump().items() if v is not None}
     result = await srv.update_catalog(catalog_id, data)
@@ -105,7 +117,7 @@ async def update_catalog(catalog_id: str, payload: DTO.CatalogUpdateDTO, srv: S.
 
 
 @router.get("/{catalog_id}/items", response_model=List[DTO.CatalogItemXResponseDTO])
-async def get_catalog_items(catalog_id: str, srv: S.CatalogService = Depends(MX.get_catalog_service)):
+async def get_catalog_items(catalog_id: str, srv: S.CatalogService = Depends(MX.get_catalog_service), _: DTO.UserProfileDTO = Depends(MX.get_current_user)):
     t0 = time.monotonic()
     result = await srv.get_catalog_items(catalog_id)
     if result.is_err:
@@ -115,7 +127,7 @@ async def get_catalog_items(catalog_id: str, srv: S.CatalogService = Depends(MX.
     return result.unwrap()
 
 @router.delete("/{catalog_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_catalog(catalog_id: str, srv: S.CatalogService = Depends(MX.get_catalog_service)):
+async def delete_catalog(catalog_id: str, srv: S.CatalogService = Depends(MX.get_catalog_service), _: DTO.UserProfileDTO = Depends(MX.get_current_user)):
     t0 = time.monotonic()
     result = await srv.delete_catalog(catalog_id)
     if result.is_err:

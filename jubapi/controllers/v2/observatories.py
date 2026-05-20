@@ -25,6 +25,7 @@ async def setup_observatory(
     payload: DTO.ObservatorySetupDTO,
     obs_svc:  S.ObservatoriesService = Depends(MX.get_observatories_service),
     task_svc: S.TasksService          = Depends(MX.get_tasks_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     """
     Creates a disabled observatory and a PENDING setup task.
@@ -71,6 +72,7 @@ async def bulk_assign_catalogs(
     observatory_id: str,
     payload:  DTO.BulkCatalogsDTO,
     obs_svc:  S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
     cat_svc:  S.CatalogService        = Depends(MX.get_catalog_service),
 ):
     """
@@ -133,6 +135,7 @@ async def bulk_assign_products(
     payload:  DTO.BulkProductsDTO,
     obs_svc:  S.ObservatoriesService = Depends(MX.get_observatories_service),
     prod_svc: S.ProductService        = Depends(MX.get_product_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     """
     Creates N products and links each one to this observatory and its catalog-item tags.
@@ -192,6 +195,7 @@ async def bulk_assign_products(
 async def create_observatory(
     payload: DTO.ObservatoryCreateDTO,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     obs_id = payload.observatory_id or nanoid(size=12)
@@ -222,6 +226,7 @@ async def create_observatory(
 )
 async def list_observatories(
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
     page_index: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
 ):
@@ -239,6 +244,7 @@ async def list_observatories(
 async def get_observatory_stats_batch(
     payload: DTO.ObservatoryStatsBatchRequestDTO,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     data = await svc.get_observatory_stats_batch(payload.ids)
@@ -250,6 +256,7 @@ async def get_observatory_stats_batch(
 async def get_observatory(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     result = await svc.get_observatory_detail(observatory_id)
@@ -265,6 +272,7 @@ async def update_observatory(
     observatory_id: str,
     payload: DTO.ObservatoryUpdateDTO,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
@@ -286,6 +294,7 @@ async def update_observatory(
 async def delete_observatory(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     result = await svc.delete_observatory(observatory_id)
@@ -305,6 +314,7 @@ async def link_catalog(
     observatory_id: str,
     payload: DTO.LinkCatalogDTO,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     # Ensure observatory exists first
     check = await svc.get_observatory(observatory_id)
@@ -321,6 +331,7 @@ async def link_catalog(
 async def list_catalogs(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -337,6 +348,7 @@ async def unlink_catalog(
     observatory_id: str,
     catalog_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -355,6 +367,7 @@ async def unlink_catalog(
 async def list_products(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -371,6 +384,7 @@ async def link_product(
     observatory_id: str,
     payload: DTO.LinkProductDTO,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -387,6 +401,7 @@ async def unlink_product(
     observatory_id: str,
     product_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -406,6 +421,7 @@ async def link_service(
     observatory_id: str,
     payload: DTO.LinkServiceDTO,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -421,6 +437,7 @@ async def link_service(
 async def list_services(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -437,6 +454,7 @@ async def unlink_service(
     observatory_id: str,
     service_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -456,6 +474,7 @@ async def link_datasource(
     observatory_id: str,
     payload: DTO.LinkDataSourceDTO,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -471,6 +490,7 @@ async def link_datasource(
 async def list_datasources(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -487,6 +507,7 @@ async def unlink_datasource(
     observatory_id: str,
     source_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     check = await svc.get_observatory(observatory_id)
     if check.is_err:
@@ -505,6 +526,7 @@ async def unlink_datasource(
 async def increment_view(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     result = await svc.increment_views(observatory_id)
     if result.is_err:
@@ -516,6 +538,7 @@ async def increment_view(
 async def list_reviews(
     observatory_id: str,
     svc: S.ObservatoriesService = Depends(MX.get_observatories_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     result = await svc.get_reviews(observatory_id)
     if result.is_err:

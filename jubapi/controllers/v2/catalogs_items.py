@@ -23,6 +23,7 @@ log = Log(name=__name__, path=os.environ.get("JUB_LOG_PATH", "/log"))
 async def create_catalog_item(
     payload: DTO.CatalogItemStandaloneCreateDTO,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     item_id = payload.catalog_item_id or f"itm_{nanoid(size=8)}"
@@ -59,6 +60,7 @@ async def create_catalog_item(
 async def list_catalog_items(
     limit: int = Query(100, ge=1, le=500),
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     result = await svc.list_catalog_items(limit=limit)
@@ -74,6 +76,7 @@ async def list_catalog_items(
 async def get_catalog_item(
     catalog_item_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     result = await svc.get_catalog_item(catalog_item_id)
@@ -89,6 +92,7 @@ async def update_catalog_item(
     catalog_item_id: str,
     payload: DTO.CatalogItemUpdateDTO,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
@@ -110,6 +114,7 @@ async def update_catalog_item(
 async def delete_catalog_item(
     catalog_item_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     result = await svc.delete_catalog_item(catalog_item_id)
@@ -128,6 +133,7 @@ async def delete_catalog_item(
 async def list_aliases(
     catalog_item_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -148,6 +154,7 @@ async def add_alias(
     catalog_item_id: str,
     payload: DTO.CatalogItemAliasCreateDTO,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -180,6 +187,7 @@ async def remove_alias(
     catalog_item_id: str,
     alias_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -201,6 +209,7 @@ async def remove_alias(
 async def list_children(
     catalog_item_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -221,6 +230,7 @@ async def link_child(
     catalog_item_id: str,
     payload: DTO.LinkItemRelationshipDTO,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -244,6 +254,7 @@ async def unlink_child(
     catalog_item_id: str,
     child_item_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -265,6 +276,7 @@ async def unlink_child(
 async def list_catalogs_for_item(
     catalog_item_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -285,6 +297,7 @@ async def link_to_catalog(
     catalog_item_id: str,
     payload: DTO.LinkItemToCatalogDTO,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -304,6 +317,7 @@ async def unlink_from_catalog(
     catalog_item_id: str,
     catalog_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)
@@ -324,6 +338,7 @@ async def unlink_from_catalog(
 async def list_products_for_item(
     catalog_item_id: str,
     svc: S.CatalogService = Depends(MX.get_catalog_service),
+    _: DTO.UserProfileDTO = Depends(MX.get_current_user)   # Ensure user is authenticated for this action
 ):
     t0 = time.monotonic()
     check = await svc.get_catalog_item(catalog_item_id)

@@ -45,28 +45,30 @@ def get_link_manager()->S.GraphLinkManager:
     return graph_link_manager
 
 
+_search_service: Optional[S.SearchService] = None
 
-def get_search_service()->S.SearchService:
-    # observatories_service = get_observatories_service()
-    service = S.SearchService(
-        catalog_alias_repository                   = R.CatalogItemAliasesRepository(get_collection(DC.CollectionNames.CATALOG_ITEM_ALIASES.value)),
-        catalog_item_catalog_alias_link_repository = R.CatalogItemToCatalogAliasLinkRepository(get_collection(DC.CollectionNames.CATALOG_ITEM_CATALOG_ALIAS_LINKS.value)),
-        catalog_item_relationship_repository       = R.CatalogItemRelationshipRepository(get_collection(DC.CollectionNames.CATALOG_ITEM_RELATIONSHIPS.value)),
-        catalog_item_repository                    = R.CatalogItemsRepository(get_collection(DC.CollectionNames.CATALOG_ITEMS.value)),
-        observatory_product_link_repository        = R.ObservatoryToProductLinkRepository(get_collection(DC.CollectionNames.OBSERVATORY_PRODUCT_LINKS.value)),
-        product_repository                         = R.ProductsRepository(get_collection(DC.CollectionNames.PRODUCTS.value)),
-        product_catalog_item_link_repository= R.ProductToCatalogItemLinkRepository(get_collection(DC.CollectionNames.PRODUCT_CATALOGS_ITEM_LINKS.value)),
-        observatory_catalog_link_repository= R.ObservatoryToCatalogLinkRepository(get_collection(DC.CollectionNames.OBSERVATORY_CATALOG_LINKS.value)),
-        catalog_catalog_item_link_repository= R.CatalogToCatalogItemLinkRepository(get_collection(DC.CollectionNames.CATALOG_CATALOG_ITEM_LINKS.value)),
-        observatory_repository = R.ObservatoriesRepository(get_collection(DC.CollectionNames.OBSERVATORIES.value)),
-        catalog_repository = R.CatalogsRepository(get_collection(DC.CollectionNames.CATALOGS.value)),
-        data_records_repository= R.DataRecordsRepository(get_collection(DC.CollectionNames.DATA_RECORDS.value))
-
-    )
-    service.suggestion_repository = R.ObservatorySearchSuggestionRepository(
-        get_collection(DC.CollectionNames.OBSERVATORY_SEARCH_SUGGESTIONS.value)
-    )
-    return service
+def get_search_service() -> S.SearchService:
+    global _search_service
+    if _search_service is None:
+        svc = S.SearchService(
+            observatory_product_link_repository        = R.ObservatoryToProductLinkRepository(get_collection(DC.CollectionNames.OBSERVATORY_PRODUCT_LINKS.value)),
+            product_catalog_item_link_repository       = R.ProductToCatalogItemLinkRepository(get_collection(DC.CollectionNames.PRODUCT_CATALOGS_ITEM_LINKS.value)),
+            catalog_item_relationship_repository       = R.CatalogItemRelationshipRepository(get_collection(DC.CollectionNames.CATALOG_ITEM_RELATIONSHIPS.value)),
+            catalog_item_repository                    = R.CatalogItemsRepository(get_collection(DC.CollectionNames.CATALOG_ITEMS.value)),
+            product_repository                         = R.ProductsRepository(get_collection(DC.CollectionNames.PRODUCTS.value)),
+            catalog_alias_repository                   = R.CatalogItemAliasesRepository(get_collection(DC.CollectionNames.CATALOG_ITEM_ALIASES.value)),
+            catalog_item_catalog_alias_link_repository = R.CatalogItemToCatalogAliasLinkRepository(get_collection(DC.CollectionNames.CATALOG_ITEM_CATALOG_ALIAS_LINKS.value)),
+            observatory_catalog_link_repository        = R.ObservatoryToCatalogLinkRepository(get_collection(DC.CollectionNames.OBSERVATORY_CATALOG_LINKS.value)),
+            catalog_catalog_item_link_repository       = R.CatalogToCatalogItemLinkRepository(get_collection(DC.CollectionNames.CATALOG_CATALOG_ITEM_LINKS.value)),
+            observatory_repository                     = R.ObservatoriesRepository(get_collection(DC.CollectionNames.OBSERVATORIES.value)),
+            catalog_repository                         = R.CatalogsRepository(get_collection(DC.CollectionNames.CATALOGS.value)),
+            data_records_repository                    = R.DataRecordsRepository(get_collection(DC.CollectionNames.DATA_RECORDS.value)),
+        )
+        svc.suggestion_repository = R.ObservatorySearchSuggestionRepository(
+            get_collection(DC.CollectionNames.OBSERVATORY_SEARCH_SUGGESTIONS.value)
+        )
+        _search_service = svc
+    return _search_service
 
 
 

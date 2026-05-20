@@ -769,26 +769,12 @@ async def test_list_reviews_empty(async_client: AsyncClient, created_observatory
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(
-    reason=(
-        "Requires a fully operational Xolo JWT-validation service. "
-        "The running Xolo instance is missing its LicenseManager secret key "
-        "(XOLO_LICENSE_SECRET_KEY env var), so GET /api/v4/users returns 500 "
-        "and the JUB middleware rejects every authenticated request with 401. "
-        "Remove this skip once the Xolo service is properly configured."
-    )
-)
-async def test_create_review_returns_201(async_client: AsyncClient, created_observatory, get_current_user):
-    """
-    POST /{observatory_id}/reviews requires a valid auth token.
-    A successful call must return 201 with the review content and rating.
-    """
-    _, headers = get_current_user
+async def test_create_review_returns_201(async_client: AsyncClient, created_observatory):
+    """POST /{observatory_id}/reviews must return 201 with the review content and rating."""
     obs_id = created_observatory["observatory_id"]
     resp = await async_client.post(
         f"{BASE}/{obs_id}/reviews",
         json={"content": "Great observatory!", "rating": 5},
-        headers=headers,
     )
     assert resp.status_code == 201
     body = resp.json()
@@ -798,31 +784,22 @@ async def test_create_review_returns_201(async_client: AsyncClient, created_obse
 
 
 @pytest.mark.asyncio
-async def test_create_review_unauthenticated_returns_401(async_client: AsyncClient, created_observatory):
+async def test_create_review_unauthenticated_returns_401(unauth_client: AsyncClient):
     """Posting a review without an Authorization header must return 401."""
-    obs_id = created_observatory["observatory_id"]
-    resp = await async_client.post(
-        f"{BASE}/{obs_id}/reviews",
+    resp = await unauth_client.post(
+        f"{BASE}/any_obs_id/reviews",
         json={"content": "No auth", "rating": 3},
     )
     assert resp.status_code == 401
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(
-    reason=(
-        "Requires a fully operational Xolo JWT-validation service. "
-        "See test_create_review_returns_201 for the full explanation."
-    )
-)
-async def test_create_review_appears_in_list(async_client: AsyncClient, created_observatory, get_current_user):
+async def test_create_review_appears_in_list(async_client: AsyncClient, created_observatory):
     """A review created via POST must be retrievable via GET /reviews."""
-    _, headers = get_current_user
     obs_id = created_observatory["observatory_id"]
     await async_client.post(
         f"{BASE}/{obs_id}/reviews",
         json={"content": "Good data", "rating": 4},
-        headers=headers,
     )
     reviews = (await async_client.get(f"{BASE}/{obs_id}/reviews")).json()
     assert len(reviews) == 1
@@ -830,64 +807,36 @@ async def test_create_review_appears_in_list(async_client: AsyncClient, created_
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(
-    reason=(
-        "Requires a fully operational Xolo JWT-validation service. "
-        "See test_create_review_returns_201 for the full explanation."
-    )
-)
-async def test_update_review(async_client: AsyncClient, created_observatory, get_current_user):
-    """
-    PUT /{observatory_id}/reviews/{review_id} must accept partial updates and
-    return the updated review.  The user can change content, rating, or both.
-    """
-    _, headers = get_current_user
+async def test_update_review(async_client: AsyncClient, created_observatory):
+    """PUT /{observatory_id}/reviews/{review_id} must accept partial updates."""
     obs_id = created_observatory["observatory_id"]
 
-    # Create a review to update
     create_resp = await async_client.post(
         f"{BASE}/{obs_id}/reviews",
         json={"content": "Initial content", "rating": 3},
-        headers=headers,
     )
     review_id = create_resp.json()["review_id"]
 
-    # Update only the rating
     update_resp = await async_client.put(
         f"{BASE}/{obs_id}/reviews/{review_id}",
         json={"rating": 5},
-        headers=headers,
     )
     assert update_resp.status_code == 200
     assert update_resp.json()["rating"] == 5
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(
-    reason=(
-        "Requires a fully operational Xolo JWT-validation service. "
-        "See test_create_review_returns_201 for the full explanation."
-    )
-)
-async def test_delete_review(async_client: AsyncClient, created_observatory, get_current_user):
-    """
-    DELETE /{observatory_id}/reviews/{review_id} must remove the review.
-    After deletion the review must no longer appear in the list.
-    """
-    _, headers = get_current_user
+async def test_delete_review(async_client: AsyncClient, created_observatory):
+    """DELETE /{observatory_id}/reviews/{review_id} must remove the review."""
     obs_id = created_observatory["observatory_id"]
 
     create_resp = await async_client.post(
         f"{BASE}/{obs_id}/reviews",
         json={"content": "To be deleted", "rating": 2},
-        headers=headers,
     )
     review_id = create_resp.json()["review_id"]
 
-    del_resp = await async_client.delete(
-        f"{BASE}/{obs_id}/reviews/{review_id}",
-        headers=headers,
-    )
+    del_resp = await async_client.delete(f"{BASE}/{obs_id}/reviews/{review_id}")
     assert del_resp.status_code == 204
 
     reviews = (await async_client.get(f"{BASE}/{obs_id}/reviews")).json()

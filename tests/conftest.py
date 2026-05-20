@@ -7,6 +7,7 @@ from jubapi.server import app
 from uuid import uuid4
 import commonx.dto.xolo as XoloDTO
 import jubapi.dto.v2 as DTO
+import jubapi.middlewares as MX
 from jubapi.db.constants import CollectionNames
 from typing import Tuple, Dict
 from motor.motor_asyncio import AsyncIOMotorClient as MongoClient
@@ -22,11 +23,34 @@ if env_exists:
     load_dotenv(JUB_ENV_FILE_PATH, override=True)
 
 
+_FAKE_USER = DTO.UserProfileDTO(
+    user_id    = "test_user_id",
+    username   = "testuser",
+    fullname   = "Test User",
+    first_name = "Test",
+    last_name  = "User",
+    email      = "testuser@test.com",
+    is_disabled= False,
+    created_at = "2024-01-01T00:00:00",
+    updated_at = "2024-01-01T00:00:00",
+    settings   = DTO.UserPreferencesDTO.default(),
+)
+
+
 @pytest.fixture
 async def async_client():
-    """Creates the async test client connected to the FastAPI app."""
+    """Creates the async test client with get_current_user overridden to a fake user."""
+    app.dependency_overrides[MX.get_current_user] = lambda: _FAKE_USER
     transport = ASGITransport(app=app)
-    # Notice the base_url points directly to the prefix defined in your router
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+    app.dependency_overrides.pop(MX.get_current_user, None)
+
+
+@pytest.fixture
+async def unauth_client():
+    """Creates a test client without auth override — use for tests that assert 401."""
+    transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
@@ -87,41 +111,6 @@ async def test_db():
 
 
 @pytest.fixture()
-async def get_current_user(async_client)->Tuple[DTO.UserProfileDTO,Dict[str,str]]:
-    # with TestClient(app) as client:
-        
-        uid = uuid4().hex[:6]
-        username = f"testuser{uid}"
-        scope = "jub"
-        data = XoloDTO.SignUpDTO(
-            username      = username,
-            password      = "password123",
-            email         = f"{username}@x.com",
-            expiration    = "1h",
-            first_name    = "John",
-            last_name     = "Doe",
-            scope         = scope,
-            profile_photo = ""
-        ).model_dump()
-
-        response = await async_client.post("/api/v2/users/signup", json=data)
-        assert response.status_code == 200
-        payload_login = XoloDTO.AuthAttemptDTO(
-            username   = username,
-            password   = "password123",
-            scope      = scope,
-            expiration = "1h"
-        )
-        response_login = await async_client.post("/api/v2/users/auth", json=payload_login.model_dump())
-        assert response_login.status_code == 200
-
-        raw_auth_response = response_login.json()
-        print("Raw auth response:", raw_auth_response)
-        
-        auth_response = DTO.AutenticationResponsetDTO.model_validate(raw_auth_response)
-        token = auth_response.access_token
-        headers ={"Authorization": f"Bearer {token}", "Temporal-Secret-Key": auth_response.temporal_secret_key or ""} 
-        response = await async_client.get("/api/v2/users/me", headers=headers)
-
-        # return XoloDTO.U
-        return auth_response.user_profile,headers
+async def get_current_user() -> Tuple[DTO.UserProfileDTO, Dict[str, str]]:
+    """Returns a fake user and empty headers. Auth is handled via dependency_overrides in async_client."""
+    return _FAKE_USER, {}

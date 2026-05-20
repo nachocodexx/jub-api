@@ -20,6 +20,7 @@ bb_router = APIRouter(prefix="/building-blocks")
 async def create_building_block(
     payload: DTO.BuildingBlockCreateDTO,
     svc: S.BuildingBlockService = Depends(MX.get_building_block_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.create(payload)
@@ -35,6 +36,7 @@ async def list_building_blocks(
     skip: int = 0,
     limit: int = 100,
     svc: S.BuildingBlockService = Depends(MX.get_building_block_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.list(skip=skip, limit=limit)
@@ -50,6 +52,7 @@ async def list_building_blocks(
 async def get_building_block(
     building_block_id: str,
     svc: S.BuildingBlockService = Depends(MX.get_building_block_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.get(building_block_id)
@@ -65,6 +68,7 @@ async def update_building_block(
     building_block_id: str,
     payload: DTO.BuildingBlockUpdateDTO,
     svc: S.BuildingBlockService = Depends(MX.get_building_block_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.update(building_block_id, payload)
@@ -79,6 +83,7 @@ async def update_building_block(
 async def delete_building_block(
     building_block_id: str,
     svc: S.BuildingBlockService = Depends(MX.get_building_block_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.delete(building_block_id)
@@ -97,6 +102,7 @@ pattern_router = APIRouter(prefix="/patterns" )
 async def create_pattern(
     payload: DTO.PatternCreateDTO,
     svc: S.PatternService = Depends(MX.get_pattern_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.create(payload)
@@ -112,6 +118,7 @@ async def list_patterns(
     skip: int = 0,
     limit: int = 100,
     svc: S.PatternService = Depends(MX.get_pattern_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.list(skip=skip, limit=limit)
@@ -126,6 +133,7 @@ async def list_patterns(
 async def get_pattern(
     pattern_id: str,
     svc: S.PatternService = Depends(MX.get_pattern_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.get(pattern_id)
@@ -141,6 +149,7 @@ async def update_pattern(
     pattern_id: str,
     payload: DTO.PatternUpdateDTO,
     svc: S.PatternService = Depends(MX.get_pattern_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.update(pattern_id, payload)
@@ -155,6 +164,7 @@ async def update_pattern(
 async def delete_pattern(
     pattern_id: str,
     svc: S.PatternService = Depends(MX.get_pattern_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.delete(pattern_id)
@@ -173,6 +183,7 @@ stage_router = APIRouter(prefix="/stages" )
 async def create_stage(
     payload: DTO.StageCreateDTO,
     svc: S.StageService = Depends(MX.get_stage_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.create(payload)
@@ -188,6 +199,7 @@ async def list_stages(
     skip: int = 0,
     limit: int = 100,
     svc: S.StageService = Depends(MX.get_stage_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.list(skip=skip, limit=limit)
@@ -202,6 +214,7 @@ async def list_stages(
 async def get_stage(
     stage_id: str,
     svc: S.StageService = Depends(MX.get_stage_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.get(stage_id)
@@ -217,6 +230,7 @@ async def update_stage(
     stage_id: str,
     payload: DTO.StageUpdateDTO,
     svc: S.StageService = Depends(MX.get_stage_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.update(stage_id, payload)
@@ -231,6 +245,7 @@ async def update_stage(
 async def delete_stage(
     stage_id: str,
     svc: S.StageService = Depends(MX.get_stage_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.delete(stage_id)
@@ -249,6 +264,7 @@ workflow_router = APIRouter(prefix="/workflows")
 async def create_workflow(
     payload: DTO.WorkflowCreateDTO,
     svc: S.WorkflowService = Depends(MX.get_workflow_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.create(payload)
@@ -264,6 +280,7 @@ async def list_workflows(
     skip: int = 0,
     limit: int = 100,
     svc: S.WorkflowService = Depends(MX.get_workflow_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.list(skip=skip, limit=limit)
@@ -278,6 +295,7 @@ async def list_workflows(
 async def get_workflow(
     workflow_id: str,
     svc: S.WorkflowService = Depends(MX.get_workflow_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.get(workflow_id)
@@ -293,6 +311,7 @@ async def update_workflow(
     workflow_id: str,
     payload: DTO.WorkflowUpdateDTO,
     svc: S.WorkflowService = Depends(MX.get_workflow_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.update(workflow_id, payload)
@@ -308,6 +327,7 @@ async def delete_workflow(
     workflow_id: str,
     cascade: bool = False,
     svc: S.WorkflowService = Depends(MX.get_workflow_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.delete(workflow_id, cascade=cascade)
@@ -327,6 +347,7 @@ service_router = APIRouter(prefix="/services" )
 async def create_service(
     payload: DTO.ServiceCreateDTO,
     svc: S.ServiceXService = Depends(MX.get_service_x_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.create(payload)
@@ -341,6 +362,7 @@ async def create_service(
 async def index_service(
     payload: DTO.ServiceIndexDTO,
     svc: S.ServiceXService = Depends(MX.get_service_x_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.create_full(payload)
@@ -356,6 +378,7 @@ async def list_services(
     skip: int = 0,
     limit: int = 100,
     svc: S.ServiceXService = Depends(MX.get_service_x_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.list(skip=skip, limit=limit)
@@ -370,6 +393,7 @@ async def list_services(
 async def get_service(
     service_id: str,
     svc: S.ServiceXService = Depends(MX.get_service_x_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.get(service_id)
@@ -385,6 +409,7 @@ async def update_service(
     service_id: str,
     payload: DTO.ServiceUpdateDTO,
     svc: S.ServiceXService = Depends(MX.get_service_x_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.update(service_id, payload)
@@ -399,6 +424,7 @@ async def update_service(
 async def delete_service(
     service_id: str,
     svc: S.ServiceXService = Depends(MX.get_service_x_service),
+    _ = Depends(MX.get_current_user)
 ):
     t0 = T.monotonic()
     result = await svc.delete(service_id)

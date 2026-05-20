@@ -98,7 +98,6 @@ class CatalogItemsRepository(BaseRepository[M.CatalogItemX]):
                     dt_val = DT.datetime.fromisoformat(target_date.replace("Z", "+00:00"))
                 else:
                     dt_val = target_date
-
                 # 2. Query the collection
                 cursor = self.collection.find({
                     "value_type": "DATETIME", # Ensure this matches your Enum if you use one (e.g., M.CatalogItemValueType.DATETIME)

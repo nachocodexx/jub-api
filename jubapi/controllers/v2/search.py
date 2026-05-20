@@ -33,7 +33,7 @@ async def search(
 
 ):
     t0 = time.monotonic()
-    result = await search.search(query=query.query, observatory_id=query.observatory_id, limit=query.limit, skip=query.skip, no_cache=query.no_cache)
+    result = await search.search(query=query.query, user_id=current_user.user_id, observatory_id=query.observatory_id, limit=query.limit, skip=query.skip, no_cache=query.no_cache)
     if result.is_err:
         log.error({"action": "controller.search.products", "error": str(result.unwrap_err()), "input": {"query": query.query, "observatory_id": query.observatory_id}})
         raise result.unwrap_err().to_http_exception()
@@ -51,7 +51,11 @@ async def search(
         "Use `source_id` in the query body to scope results to a single data source."
     ),
 )
-async def search_records(query: DTO.SearchQueryDTO, search: S.SearchService = Depends(M.get_search_service)):
+async def search_records(
+    query: DTO.SearchQueryDTO,
+    search: S.SearchService = Depends(M.get_search_service),
+    current_user: DTO.UserProfileDTO = Depends(MX.get_current_user),
+):
     t0 = time.monotonic()
     result = await search.search_data_records(
         query_str      = query.query,
@@ -79,7 +83,11 @@ async def search_records(query: DTO.SearchQueryDTO, search: S.SearchService = De
         "VO operators: `COUNT`, `AVG(field)`, `SUM(field)` — `field` must be a key in `numerical_interest_ids`."
     ),
 )
-async def generate_plot(query: DTO.PlotQueryDTO, search: S.SearchService = Depends(M.get_search_service)):
+async def generate_plot(
+    query: DTO.PlotQueryDTO,
+    search: S.SearchService = Depends(M.get_search_service),
+    current_user: DTO.UserProfileDTO = Depends(MX.get_current_user),
+):
     t0 = time.monotonic()
     result = await search.generate_plot(
         query_str  = query.query,
@@ -104,6 +112,7 @@ async def search_observatories(
     t0 = time.monotonic()
     result = await search.search_observatories(
         query    = query.query,
+        user_id  = current_user.user_id,
         strict   = query.strict,
         skip     = query.skip or 0,
         limit    = query.limit or 100,
@@ -126,6 +135,7 @@ async def search_observatories(
 async def get_observatory_search_suggestions(
     limit: int = Query(5, ge=1, le=20),
     search: S.SearchService = Depends(M.get_search_service),
+    current_user: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     result = await search.get_observatory_search_suggestions(limit=limit)
     if result.is_err:
@@ -143,6 +153,7 @@ async def get_search_suggestions(
     observatory_id: Optional[str] = Query(None, description="Observatory to fetch suggestions for. Omit for global suggestions."),
     limit: int = Query(5, ge=1, le=20),
     search: S.SearchService = Depends(M.get_search_service),
+    current_user: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     key = observatory_id if observatory_id else "__global__"
     result = await search.get_search_suggestions(observatory_id=key, limit=limit)
@@ -162,6 +173,7 @@ async def get_search_suggestions(
 async def search_services(
     query: DTO.ServiceQueryDTO,
     svc:   S.ServiceXService = Depends(M.get_service_x_service),
+    current_user: DTO.UserProfileDTO = Depends(MX.get_current_user),
 ):
     t0 = time.monotonic()
     result = await svc.query_services_hydrated(query.query, skip=query.skip, limit=query.limit)

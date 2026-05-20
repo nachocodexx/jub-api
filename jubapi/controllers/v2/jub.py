@@ -107,18 +107,3 @@ async def seed_database_from_yaml(
     except Exception as e:
         log.error(f"Error processing catalogs and items: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to process catalogs/items: {str(e)}")
-
-#         # ==========================================
-#         # PHASE 2: Process Observatories and Links
-#         # ==========================================
-
-#         # ==========================================
-#         # PHASE 3: Process Products
-#         # ==========================================
-
-#         return {"status": "success", "message": "Database successfully seeded from YAML."}
-
-#     except Exception as e:
-#         log.error(f"Error during YAML database seed: {e}")
-#         # Depending on your error handling, returning a 500 is standard here
-#         raise HTTPException(status_code=500, detail=f"Failed to seed database: {str(e)}")

@@ -1603,6 +1603,8 @@ class ProductService:
 
 
 class SearchService:
+
+    
     def __init__(
         self, 
         observatory_product_link_repository:R.ObservatoryToProductLinkRepository,
@@ -1618,18 +1620,18 @@ class SearchService:
         catalog_repository: R.CatalogsRepository,
         data_records_repository: R.DataRecordsRepository
     ):
-        self.observatory_product_link_repository  = observatory_product_link_repository
-        self.product_catalog_item_link_repository = product_catalog_item_link_repository
-        self.catalog_item_relationship_repository = catalog_item_relationship_repository
-        self.catalog_item_repository              = catalog_item_repository
-        self.product_repository                   = product_repository
-        self.catalog_alias_repository             = catalog_alias_repository
+        self.observatory_product_link_repository        = observatory_product_link_repository
+        self.product_catalog_item_link_repository       = product_catalog_item_link_repository
+        self.catalog_item_relationship_repository       = catalog_item_relationship_repository
+        self.catalog_item_repository                    = catalog_item_repository
+        self.product_repository                         = product_repository
+        self.catalog_alias_repository                   = catalog_alias_repository
         self.catalog_item_catalog_alias_link_repository = catalog_item_catalog_alias_link_repository
-        self.observatory_catalog_link_repository = observatory_catalog_link_repository
-        self.catalog_catalog_item_link_repository = catalog_catalog_item_link_repository
-        self.observatory_repository              = observatory_repository
-        self.catalog_repository                  = catalog_repository
-        self.data_records_repository             = data_records_repository
+        self.observatory_catalog_link_repository        = observatory_catalog_link_repository
+        self.catalog_catalog_item_link_repository       = catalog_catalog_item_link_repository
+        self.observatory_repository                     = observatory_repository
+        self.catalog_repository                         = catalog_repository
+        self.data_records_repository                    = data_records_repository
         self.suggestion_repository: Optional[R.ObservatorySearchSuggestionRepository] = None
         self._product_cache     = TTLCache(maxsize=512, ttl=JUB_SEARCH_PRODUCT_CACHE_TTL)
         self._observatory_cache = TTLCache(maxsize=256, ttl=JUB_SEARCH_OBSERVATORY_CACHE_TTL)
@@ -1686,19 +1688,22 @@ class SearchService:
                 result = result & s
             return result
 
-    async def search_observatories(self, query: str, strict: bool = True, skip: int = 0, limit: int = 100, no_cache: bool = False) -> Result[List[DTO.ObservatoryXDTO], EX.JubError]:
+    async def search_observatories(self, query: str, user_id: str, strict: bool = True, skip: int = 0, limit: int = 100, no_cache: bool = False) -> Result[List[DTO.ObservatoryXDTO], EX.JubError]:
         """
         Finds observatories by walking: DSL condition → catalog items (+ aliases)
         → products → observatories. Only observatories with at least one matching
         product are returned.
         """
-        cache_key = (query, strict, skip, limit)
+        cache_key = (user_id, query, strict, skip, limit)
         if not no_cache and cache_key in self._observatory_cache:
+            L.info({
+                "message": "Observatory search cache hit",
+                "cache_key": cache_key,
+            })
             return Ok(self._observatory_cache[cache_key])
 
         try:
             ast = QueryAST.parse(query)
-            L.debug(f"Parsed AST: {ast}")
 
             mongo_op_map = {">": "$gt", ">=": "$gte", "<": "$lt", "<=": "$lte", "=": "$eq"}
 
@@ -1814,8 +1819,15 @@ class SearchService:
                 else:
                     L.warning(f"Failed to fetch observatory details for one of the results: {obs.unwrap_err()}")
             result = dtos[skip: skip + limit]
+            
             if not no_cache:
+                L.info({
+                    "action": "observatory_search_cache_store",
+                    "cache_key": cache_key,
+                    "result_count": len(result),
+                })
                 self._observatory_cache[cache_key] = result
+            
             if result and self.suggestion_repository:
                 asyncio.create_task(
                     self.suggestion_repository.record_hit("__observatories__", query)
@@ -2015,12 +2027,12 @@ class SearchService:
     
     
     
-    async def search(self, query: str, observatory_id: Optional[str] = None, skip: int = 0, limit: int = 10, no_cache: bool = False) -> Result[List[DTO.ProductXDTO], EX.JubError]:
+    async def search(self, query: str, user_id: str, observatory_id: Optional[str] = None, skip: int = 0, limit: int = 10, no_cache: bool = False) -> Result[List[DTO.ProductXDTO], EX.JubError]:
         """
         Takes raw ProductX models, resolves their graph relationships to get
         catalog item names, and returns fully hydrated ProductXDTOs.
         """
-        cache_key = (query, observatory_id, skip, limit)
+        cache_key = (user_id, query, observatory_id, skip, limit)
         if not no_cache and cache_key in self._product_cache:
             return Ok(self._product_cache[cache_key])
 
